@@ -1,31 +1,30 @@
-import flet
-from flet import IconButton, Page, Row, TextField, icons
+import asyncio
+import flet as ft
 
 
-def main(page: Page):
-    page.title = "Flet counter example"
-    page.vertical_alignment = "center"
+class Countdown(ft.Text):
+    def __init__(self, seconds):
+        super().__init__()
+        self.seconds = seconds
 
-    txt_number = TextField(value="0", text_align="right", width=100)
+    def did_mount(self):
+        self.running = True
+        self.page.run_task(self.update_timer)
 
-    def minus_click(e):
-        txt_number.value = int(txt_number.value) - 1
-        page.update()
+    def will_unmount(self):
+        self.running = False
 
-    def plus_click(e):
-        txt_number.value = int(txt_number.value) + 1
-        page.update()
-
-    page.add(
-        Row(
-            [
-                IconButton(icons.REMOVE, on_click=minus_click),
-                txt_number,
-                IconButton(icons.ADD, on_click=plus_click),
-            ],
-            alignment="center",
-        )
-    )
+    async def update_timer(self):
+        while self.seconds and self.running:
+            mins, secs = divmod(self.seconds, 60)
+            self.value = "{:02d}:{:02d}".format(mins, secs)
+            self.update()
+            await asyncio.sleep(1)
+            self.seconds -= 1
 
 
-flet.app(target=main)
+def main(page: ft.Page):
+    page.add(Countdown(120), Countdown(60))
+
+
+ft.app(main)
